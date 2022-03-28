@@ -1,8 +1,8 @@
-from multiprocessing import dummy
 import sys
 import os
 from torch import Tensor
 import torch.optim as optim
+import torch
 
 import time
 
@@ -35,10 +35,10 @@ if USE_GPU:
 else:
     print("Using CPU")
 
-dummy_data = loader.load_n(50)
+dummy_data = loader.load_n(5)
 
 
-loader.start_loader(n_batches=420, normal_pct=0.5, n_val_batches=20)
+# loader.start_loader(n_batches=420, normal_pct=0.5, n_val_batches=20)
 
 
 y = model.forward(dummy_data)

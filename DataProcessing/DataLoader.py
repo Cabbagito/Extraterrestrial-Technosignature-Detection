@@ -59,6 +59,34 @@ class DataLoader:
             f"Per Batch: {n_per_batch} \nAnomalies Per Batch: {n_a_per_batch} \nNormal Per Batch: {n_n_per_batch} \nValidation Set size: {n_val}"
         )
 
+        self.batches = []
+        self.val_batches = []
+        self.batch = 0
+        self.n_batches = n_batches
+        data = self.labels.copy()
+
+        for batch in range(n_val_batches):
+            batch_n_df = data[data["target"] == 0].sample(n=n_n_per_batch)
+            batch_a_df = data[data["target"] == 1].sample(n=n_a_per_batch)
+
+            self.val_batches.append(
+                batch_n_df["id"].tolist().extend(batch_a_df["id"].tolist())
+            )
+
+            data.drop(batch_n_df.index, inplace=True)
+            data.drop(batch_a_df.index, inplace=True)
+
+        for batch in range(n_batches):
+            batch_n_df = data[data["target"] == 0].sample(n=n_n_per_batch)
+            batch_a_df = data[data["target"] == 1].sample(n=n_a_per_batch)
+
+            self.batches.append(
+                batch_n_df["id"].tolist().extend(batch_a_df["id"].tolist())
+            )
+
+            data.drop(batch_n_df.index, inplace=True)
+            data.drop(batch_a_df.index, inplace=True)
+
     def next_batch(self):
         if not self.__loader_initialized:
             raise Exception("Loader not initialized")
