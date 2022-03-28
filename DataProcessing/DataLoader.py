@@ -9,8 +9,10 @@ class DataLoader:
         self.path = path
         self.labels = pd.read_csv(self.path + "/../train_labels.csv")
         self.n = self.labels.shape[0]
-        self.a_pct = self.labels[self.labels["target"] == 1].shape[0] / self.n
+        self.n_a = self.labels[self.labels["target"] == 1].shape[0]
+        self.n_n = self.n - self.n_a
         self.__loader_initialized = False
+        self.use_gpu = False
 
     def load_one(self, filename):
         for dir in os.listdir(self.path):
@@ -32,7 +34,10 @@ class DataLoader:
         for index, row in subset.iterrows():
             retdata.append(self.load_one(row["id"]))
 
-        return Tensor(np.array(retdata))
+        if not self.use_gpu:
+            return Tensor(np.array(retdata))
+        else:
+            return Tensor(np.array(retdata)).cuda()
 
     def get_files(self, target=None):
         if target is None:
@@ -40,10 +45,19 @@ class DataLoader:
         else:
             return self.labels[self.labels["target"] == target]["target"].tolist()
 
-    def start_loader(self, n_batches, create_val=False):
-        n_per_batch = int(self.n / n_batches)
-        n_a_per_batch = int(n_per_batch * self.a_pct)
-        n_n_per_batch = n_per_batch - n_a_per_batch
+    def start_loader(self, n_batches, n_val_batches=0, normal_pct=1):
+        self.__loader_initialized = True
+
+        n_n_per_batch = int(self.n_n * normal_pct / n_batches)
+        n_a_per_batch = int(self.n_a / n_batches)
+
+        n_per_batch = n_n_per_batch + n_a_per_batch
+
+        n_val = n_val_batches * n_n_per_batch
+
+        print(
+            f"Per Batch: {n_per_batch} \nAnomalies Per Batch: {n_a_per_batch} \nNormal Per Batch: {n_n_per_batch} \nValidation Set size: {n_val}"
+        )
 
     def next_batch(self):
         if not self.__loader_initialized:
