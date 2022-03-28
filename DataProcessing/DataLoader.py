@@ -61,7 +61,7 @@ class DataLoader:
 
         self.batches = []
         self.val_batches = []
-        self.batch = 0
+        self.batch_idx = 0
         self.n_batches = n_batches
         data = self.labels.copy()
 
@@ -76,7 +76,7 @@ class DataLoader:
             data.drop(batch_n_df.index, inplace=True)
             data.drop(batch_a_df.index, inplace=True)
 
-        for batch in range(n_batches):
+        for batch in range(n_batches - n_val_batches):
             batch_n_df = data[data["target"] == 0].sample(n=n_n_per_batch)
             batch_a_df = data[data["target"] == 1].sample(n=n_a_per_batch)
 
@@ -91,3 +91,41 @@ class DataLoader:
         if not self.__loader_initialized:
             raise Exception("Loader not initialized")
 
+        if self.batch_idx >= self.n_batches:
+            self.batch_idx = 0
+
+        self.batch_idx += 1
+        if self.use_gpu:
+            return Tensor(
+                np.array(self.__load_batch(self.batches[self.batch_idx - 1]))
+            ).cuda()
+        else:
+            return Tensor(np.array(self.__load_batch(self.batches[self.batch_idx - 1])))
+
+    def get_val_data(self):
+        if not self.__loader_initialized:
+            raise Exception("Loader not initialized")
+
+        retdata = []
+        for batch in range(self.val_batches):
+            retdata.extend(self.__load_batch(self.val_batches))
+
+        if self.use_gpu:
+            return Tensor(np.array(retdata)).cuda()
+        else:
+            return Tensor(np.array(retdata))
+
+    def __load_batch(self, batch):
+        retdata = []
+        for dir in os.listdir(self.path):
+            for file in os.listdir(os.path.join(self.path, dir)):
+                if file[:-4] in batch:
+                    retdata.append(
+                        np.expand_dims(
+                            np.load(os.path.join(self.path, dir, file)), axis=0
+                        )
+                    )
+                    if len(retdata) == len(batch):
+                        break
+
+        return np.array(retdata)
