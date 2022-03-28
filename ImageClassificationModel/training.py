@@ -19,7 +19,7 @@ N_ANOMALY = 6000
 N_NORMAL = 54000
 IMG_SHAPE = (1, 819, 256)
 
-USE_GPU = False
+USE_GPU = True
 N_BATCHES = 500
 
 ###
@@ -27,21 +27,35 @@ N_BATCHES = 500
 model = Model()
 loader = DataLoader(DATADIR)
 
+n_params = sum(p.numel() for p in model.parameters())
+n_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 
 if USE_GPU:
     model = model.cuda()
     loader.use_gpu = True
-    print("Using GPU")
+    print("Using GPU\n\n")
 else:
-    print("Using CPU")
+    print("Using CPU\n\n")
 
-dummy_data = loader.load_n(5)
+print(
+    f"Number of parameters: {n_params}\nNumber of trainable parameters: {n_trainable_params}\n\n"
+)
+
+
+dummy_size = 100
+start = time.time()
+dummy_data = loader.load_n(dummy_size)
+end = time.time()
+load_time = end - start
+print(f"Loading {dummy_size} images took {load_time} seconds")
 
 
 # loader.start_loader(n_batches=420, normal_pct=0.5, n_val_batches=20)
 
-
+start = time.time()
 y = model.forward(dummy_data)
-
-print(y.shape)
+end = time.time()
+ff = end - start
+print(f"Forward Pass of size {dummy_size} took {ff} seconds")
 
