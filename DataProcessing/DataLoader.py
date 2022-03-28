@@ -69,9 +69,9 @@ class DataLoader:
             batch_n_df = data[data["target"] == 0].sample(n=n_n_per_batch)
             batch_a_df = data[data["target"] == 1].sample(n=n_a_per_batch)
 
-            self.val_batches.append(
-                batch_n_df["id"].tolist().extend(batch_a_df["id"].tolist())
-            )
+            to_add = batch_n_df["id"].tolist()
+            to_add.extend(batch_a_df["id"].tolist())
+            self.val_batches.append(to_add)
 
             data.drop(batch_n_df.index, inplace=True)
             data.drop(batch_a_df.index, inplace=True)
@@ -80,9 +80,10 @@ class DataLoader:
             batch_n_df = data[data["target"] == 0].sample(n=n_n_per_batch)
             batch_a_df = data[data["target"] == 1].sample(n=n_a_per_batch)
 
-            self.batches.append(
-                batch_n_df["id"].tolist().extend(batch_a_df["id"].tolist())
-            )
+            to_add = batch_n_df["id"].tolist()
+            to_add.extend(batch_a_df["id"].tolist())
+            self.batches.append(to_add)
+
 
             data.drop(batch_n_df.index, inplace=True)
             data.drop(batch_a_df.index, inplace=True)

@@ -45,17 +45,20 @@ print(
 
 dummy_size = 100
 start = time.time()
-dummy_data = loader.load_n(dummy_size)
+# dummy_data = loader.load_n(dummy_size)
 end = time.time()
-load_time = end - start
-print(f"Loading {dummy_size} images took {load_time} seconds")
+
+print(f"Loading {dummy_size} observations took {end - start} seconds")
 
 
-# loader.start_loader(n_batches=420, normal_pct=0.5, n_val_batches=20)
+loader.start_loader(n_batches=420, normal_pct=0.5, n_val_batches=20)
+
+batch = loader.next_batch()
+
 
 start = time.time()
-y = model.forward(dummy_data)
+y = model.forward(batch)
 end = time.time()
-ff = end - start
-print(f"Forward Pass of size {dummy_size} took {ff} seconds")
+
+print(f"Forward Pass of size {dummy_size} took {end - start} seconds")
 
