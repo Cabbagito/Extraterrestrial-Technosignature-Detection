@@ -2,15 +2,16 @@ import sys
 import os
 from torch.optim import Adam, AdamW, RMSprop
 from torch.nn import BCELoss
+from torch import no_grad
 
 
-import time
+from time import time
 
 sys.path.append(os.path.join(os.getcwd()))
 
 from DataProcessing.dataLoader import DataLoader
 from model import Model
-from util import save_and_log, load, newest_model
+from util import save_and_log, load, newest_model, validate
 
 
 ###
@@ -26,11 +27,10 @@ IMG_SHAPE = (1, 819, 256)
 ###
 
 USE_GPU = True
-N_BATCHES = 500
-N_VAL_BATCHES = 1
+N_BATCHES = 700
+N_VAL_BATCHES = 70
 NORMAL_PCT = 0.7
-SAVE_AFTER_N_BATCHES = 50
-VALIDATE_AFTER_N_BATCHES = 50
+SAVE_AND_VALIDATE_AFTER_N_BATCHES = 50
 
 ###
 
@@ -40,7 +40,7 @@ LOAD_NEWEST = False
 
 ###
 
-AUGMENT_TRAINING_DATA = False
+AUGMENT_TRAINING_DATA = True
 AUGMENT_TRAINING_DATA_PERCENTAGE = 0.25
 AUGMENT_TESTING_DATA = False
 AUGMENT_TESTING_DATA_PERCENTAGE = 0.25
@@ -70,7 +70,7 @@ else:
     print("Using CPU\n\n")
 
 
-loss = BCELoss()
+loss_fn = BCELoss()
 optimizer = AdamW(model.parameters(), lr=LEARNING_RATE)
 
 
@@ -83,3 +83,33 @@ n_per_batch, n_n_per_batch, n_a_per_batch, n_val = loader.start_loader(
     n_batches=N_BATCHES, normal_pct=NORMAL_PCT, n_val_batches=N_VAL_BATCHES
 )
 
+
+for epoch in range(EPOCHS):
+    print("#" * 80)
+    print(f"Epoch {epoch}")
+    print("#" * 80, "\n")
+    for batch in N_BATCHES - N_VAL_BATCHES:
+
+        optimizer.zero_grad()
+
+        x, yhat = loader.next_batch()
+        start = time()
+        y = model(x)
+        end = time()
+
+        loss = loss_fn(y, yhat)
+        loss.backward()
+        optimizer.step()
+        val_string = ""
+        if batch % SAVE_AND_VALIDATE_AFTER_N_BATCHES == 0:
+            with no_grad():
+                val_loss, val_accuracy, precision, recall, outcomes = validate(
+                    model, loader, loss_fn
+                )
+                newest += 1
+            save_and_log(
+                model, newest, epoch, batch, (val_loss, val_accuracy, precision, recall)
+            )
+            val_string = f'\nValidation loss: {val_loss}, Validation accuracy: {val_accuracy}, Validation precision: {precision}, Validation recall: {recall}\n'
+
+        print(f'Batch {batch} Loss: {loss}, Time: {end - start} {val_string}')
