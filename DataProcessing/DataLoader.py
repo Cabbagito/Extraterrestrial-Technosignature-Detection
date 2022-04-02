@@ -63,6 +63,8 @@ class DataLoader:
         self.val_batches = []
         self.batch_idx = 0
         self.n_batches = n_batches
+        self.n_val_batches = n_val_batches
+        self.val_batch_idx = 0
         data = self.labels.copy()
 
         for batch in range(n_val_batches):
@@ -84,7 +86,6 @@ class DataLoader:
             to_add.extend(batch_a_df["id"].tolist())
             self.batches.append(to_add)
 
-
             data.drop(batch_n_df.index, inplace=True)
             data.drop(batch_a_df.index, inplace=True)
 
@@ -96,28 +97,29 @@ class DataLoader:
             self.batch_idx = 0
 
         self.batch_idx += 1
+        data = self.__load_batch(self.batches[self.batch_idx - 1])
         if self.use_gpu:
-            return Tensor(
-                np.array(self.__load_batch(self.batches[self.batch_idx - 1]))
-            ).cuda()
+            return Tensor(data[0]).cuda(), Tensor(data[1]).unsqueeze(1).cuda()
         else:
-            return Tensor(np.array(self.__load_batch(self.batches[self.batch_idx - 1])))
+            return Tensor(data[0]), Tensor(data[1]).unsqueeze(1)
 
-    def get_val_data(self):
+    def next_val_batch(self):
         if not self.__loader_initialized:
             raise Exception("Loader not initialized")
 
-        retdata = []
-        for batch in range(self.val_batches):
-            retdata.extend(self.__load_batch(self.val_batches))
+        if self.val_batch_idx >= self.n_val_batches:
+            self.val_batch_idx = 0
 
+        self.val_batch_idx += 1
+        data = self.__load_batch(self.val_batches[self.val_batch_idx - 1])
         if self.use_gpu:
-            return Tensor(np.array(retdata)).cuda()
+            return Tensor(data[0]).cuda(), Tensor(data[1]).unsqueeze(1).cuda()
         else:
-            return Tensor(np.array(retdata))
+            return Tensor(data[0]), Tensor(data[1].unsqueeze(1))
 
     def __load_batch(self, batch):
         retdata = []
+        labels = []
         for dir in os.listdir(self.path):
             for file in os.listdir(os.path.join(self.path, dir)):
                 if file[:-4] in batch:
@@ -126,7 +128,10 @@ class DataLoader:
                             np.load(os.path.join(self.path, dir, file)), axis=0
                         )
                     )
+                    labels.append(
+                        self.labels[self.labels["id"] == file[:-4]]["target"].values[0]
+                    )
                     if len(retdata) == len(batch):
                         break
 
-        return np.array(retdata)
+        return (np.array(retdata), labels)

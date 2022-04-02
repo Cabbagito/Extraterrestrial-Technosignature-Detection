@@ -19,8 +19,10 @@ N_ANOMALY = 6000
 N_NORMAL = 54000
 IMG_SHAPE = (1, 819, 256)
 
-USE_GPU = True
+USE_GPU = False
 N_BATCHES = 500
+N_VAL_BATCHES = 1
+NORMAL_PCT = 0.7
 
 ###
 
@@ -42,23 +44,26 @@ print(
     f"Number of parameters: {n_params}\nNumber of trainable parameters: {n_trainable_params}\n\n"
 )
 
-
+"""  Load Dummy Data Test
 dummy_size = 100
 start = time.time()
-# dummy_data = loader.load_n(dummy_size)
+dummy_data = loader.load_n(dummy_size)
 end = time.time()
 
 print(f"Loading {dummy_size} observations took {end - start} seconds")
 
+"""
+loader.start_loader(
+    n_batches=N_BATCHES, normal_pct=NORMAL_PCT, n_val_batches=N_VAL_BATCHES
+)
 
-loader.start_loader(n_batches=420, normal_pct=0.5, n_val_batches=20)
-
-batch = loader.next_batch()
+x, yhat = loader.next_batch()
 
 
 start = time.time()
-y = model.forward(batch)
+y = model.forward(x)
 end = time.time()
+
 
 print(f"Forward Pass of size {dummy_size} took {end - start} seconds")
 
