@@ -1,3 +1,4 @@
+from hashlib import new
 import sys
 import os
 from torch.optim import Adam, AdamW, RMSprop
@@ -28,7 +29,7 @@ IMG_SHAPE = (1, 819, 256)
 
 USE_GPU = True
 N_BATCHES = 700
-N_VAL_BATCHES = 70
+N_VAL_BATCHES = 1
 NORMAL_PCT = 0.7
 SAVE_AND_VALIDATE_AFTER_N_BATCHES = 50
 
@@ -46,10 +47,12 @@ AUGMENT_TESTING_DATA = False
 AUGMENT_TESTING_DATA_PERCENTAGE = 0.25
 
 ###
+
 newest = newest_model(MODELS_DIR)
-if LOAD_NEWEST:
+if LOAD_NEWEST and newest != -1:
     model = load(newest)
 else:
+    newest = 0
     model = Model()
 loader = DataLoader(DATADIR)
 
@@ -84,11 +87,13 @@ n_per_batch, n_n_per_batch, n_a_per_batch, n_val = loader.start_loader(
 )
 
 
+
+
 for epoch in range(EPOCHS):
     print("#" * 80)
     print(f"Epoch {epoch}")
     print("#" * 80, "\n")
-    for batch in N_BATCHES - N_VAL_BATCHES:
+    for batch in range(N_BATCHES - N_VAL_BATCHES):
 
         optimizer.zero_grad()
 
@@ -110,6 +115,7 @@ for epoch in range(EPOCHS):
             save_and_log(
                 model, newest, epoch, batch, (val_loss, val_accuracy, precision, recall)
             )
-            val_string = f'\nValidation loss: {val_loss}, Validation accuracy: {val_accuracy}, Validation precision: {precision}, Validation recall: {recall}\n'
+            val_string = f"\nValidation loss: {val_loss}, Validation accuracy: {val_accuracy}, Validation precision: {precision}, Validation recall: {recall}\n"
 
-        print(f'Batch {batch} Loss: {loss}, Time: {end - start} {val_string}')
+        print(f"Batch {batch} Loss: {loss}, Time: {end - start} {val_string}")
+
