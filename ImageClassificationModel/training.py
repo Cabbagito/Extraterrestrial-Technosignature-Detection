@@ -29,9 +29,9 @@ IMG_SHAPE = (1, 819, 256)
 
 USE_GPU = True
 N_BATCHES = 700
-N_VAL_BATCHES = 10
+N_VAL_BATCHES = 50
 NORMAL_PCT = 0.6
-SAVE_AND_VALIDATE_AFTER_N_BATCHES = 10
+SAVE_AND_VALIDATE_AFTER_N_BATCHES = 70
 
 ###
 
@@ -102,7 +102,7 @@ for epoch in range(EPOCHS):
         loss.backward()
         optimizer.step()
         val_string = ""
-        if (batch % SAVE_AND_VALIDATE_AFTER_N_BATCHES == 0) and batch != 0:
+        if (batch + 1) % SAVE_AND_VALIDATE_AFTER_N_BATCHES == 0:
             with no_grad():
                 val_loss, val_accuracy, precision, recall, outcomes = validate(
                     model, loader, loss_fn
