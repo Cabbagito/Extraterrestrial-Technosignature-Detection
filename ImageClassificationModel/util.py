@@ -1,5 +1,6 @@
 from torch import save, load
 from os import listdir
+from tqdm import tqdm
 
 
 def save_and_log(
@@ -33,17 +34,43 @@ def newest_model(models_dir):
 
 def validate(model, loader, loss_fn):
     n_batches = loader.n_val_batches
-    for batch in range(n_batches):
+    losses = []
+    accuracies = []
+    precisions = []
+    recalls = []
+    outcomes = [[], [], [], []]
+    print("Validating...")
+    for batch in tqdm(range(n_batches)):
         x, yhat = loader.next_val_batch()
         y = model(x)
         loss = loss_fn(y, yhat)
         y = y.detach().cpu().squeeze(1).numpy()
         yhat = yhat.detach().cpu().squeeze(1).numpy()
-        outcomes = calculate_outcomes(yhat, y)
+        outcomes_batch = calculate_outcomes(yhat, y)
         accuracy = accuracy_score(yhat, y)
-        precision = precision_score(outcomes)
-        recall = recall_score(outcomes)
-        return loss.item(), accuracy, precision, recall, outcomes
+        precision = precision_score(outcomes_batch)
+        recall = recall_score(outcomes_batch)
+
+        losses.append(loss.item())
+        accuracies.append(accuracy)
+        precisions.append(precision)
+        recalls.append(recall)
+        o0, o1, o2, o3 = outcomes_batch
+        outcomes[0].append(o0)
+        outcomes[1].append(o1)
+        outcomes[2].append(o2)
+        outcomes[3].append(o3)
+    return (
+        average(losses),
+        average(accuracies),
+        average(precisions),
+        average(recalls),
+        (sum(outcomes[0]), sum(outcomes[1]), sum(outcomes[2]), sum(outcomes[3])),
+    )
+
+
+def average(metrics):
+    return sum(metrics) / len(metrics)
 
 
 def calculate_outcomes(yhat, y):

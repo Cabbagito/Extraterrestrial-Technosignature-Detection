@@ -29,9 +29,9 @@ IMG_SHAPE = (1, 819, 256)
 
 USE_GPU = True
 N_BATCHES = 700
-N_VAL_BATCHES = 1
-NORMAL_PCT = 0.7
-SAVE_AND_VALIDATE_AFTER_N_BATCHES = 50
+N_VAL_BATCHES = 10
+NORMAL_PCT = 0.6
+SAVE_AND_VALIDATE_AFTER_N_BATCHES = 10
 
 ###
 
@@ -42,7 +42,7 @@ LOAD_NEWEST = False
 ###
 
 AUGMENT_TRAINING_DATA = True
-AUGMENT_TRAINING_DATA_PERCENTAGE = 0.25
+AUGMENT_TRAINING_DATA_PERCENTAGE = 0.8
 AUGMENT_TESTING_DATA = False
 AUGMENT_TESTING_DATA_PERCENTAGE = 0.25
 
@@ -58,11 +58,9 @@ loader = DataLoader(DATADIR)
 
 
 n_params = sum(p.numel() for p in model.parameters())
-n_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-print(
-    f"Number of parameters: {n_params}\nNumber of trainable parameters: {n_trainable_params}\n\n"
-)
+
+print(f"\nNumber of parameters: {n_params}\n\n")
 
 
 if USE_GPU:
@@ -87,8 +85,6 @@ n_per_batch, n_n_per_batch, n_a_per_batch, n_val = loader.start_loader(
 )
 
 
-
-
 for epoch in range(EPOCHS):
     print("#" * 80)
     print(f"Epoch {epoch}")
@@ -106,7 +102,7 @@ for epoch in range(EPOCHS):
         loss.backward()
         optimizer.step()
         val_string = ""
-        if batch % SAVE_AND_VALIDATE_AFTER_N_BATCHES == 0:
+        if (batch % SAVE_AND_VALIDATE_AFTER_N_BATCHES == 0) and batch != 0:
             with no_grad():
                 val_loss, val_accuracy, precision, recall, outcomes = validate(
                     model, loader, loss_fn

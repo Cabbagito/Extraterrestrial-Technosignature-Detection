@@ -63,7 +63,7 @@ class DataLoader:
         n_val = n_val_batches * n_n_per_batch
 
         print(
-            f"Per Batch: {n_per_batch} \nAnomalies Per Batch: {n_a_per_batch} \nNormal Per Batch: {n_n_per_batch} \nValidation Set size: {n_val}\n*Without augmentation*"
+            f"Per Batch: {n_per_batch} \nAnomalies Per Batch: {n_a_per_batch} \nNormal Per Batch: {n_n_per_batch} \nValidation Set size: {n_val}\n*Without augmentation*\n\n"
         )
 
         self.batches = []
